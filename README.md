@@ -8,6 +8,8 @@ Event Classification</a> </li>
 Analysis</a></li>
  <li><p><a href="https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/tr-2001-79.pdf">A Robust Audio Classification and Segmentation Method</a><p>
  <p>Note: publish 2001, algorithm</p>
-     
+ </li>
+ <li><p><a href = "https://arxiv.org/pdf/1609.09430v2.pdf">CNN architectures for large-scale audio classification</a></p>
+  <p>Note: Large scale audio analysis </p>
  </li>
 </ul>
