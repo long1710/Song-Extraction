@@ -19,4 +19,5 @@ CONVOLUTIONAL NEURAL NETWORK</a></p>
    <li><p><a href = "https://www.researchgate.net/publication/324887259_Randomly_weighted_CNNs_for_music_audio_classification">RANDOMLY WEIGHTED CNNs FOR (MUSIC) AUDIO CLASSIFICATION</a></p>
   <p>Note: same bit rate ( 12000 khz) </p>
  </li>
+  <li><a href ="https://arxiv.org/pdf/1811.06669.pdf">ACLNET: EFFICIENT END-TO-END AUDIO CLASSIFICATION CNN</a></li>
 </ul>
