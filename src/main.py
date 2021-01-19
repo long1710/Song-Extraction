@@ -27,20 +27,42 @@ commands = ['singing', 'talking']
 # SINGING_PATH:
 path_sing = {
     "Country": '../public/singing/country',
+    "Country2": '../public/singing/country2',
     "Dance_electronic": '../public/singing/dance_electronic',
     "Duet": '../public/singing/Duet',
     "Gura": '../public/singing/gura',  # gura is a vtuber, just my personal interest
+    "Amelia": '../public/singing/amelia',
+    "Calliope": '../public/singing/Calliope',
+    "Ina": '../public/singing/ina',
+    "Kiara": '../public/singing/kiara',
+    "Pekora": '../public/singing/pekora',
     "Rap": '../public/singing/Rap',
     "Rock": '../public/singing/rock',
-    "Traditional": '../public/singing/Traditional'
+    "Traditionals": '../public/singing/Traditionals',
+    "Blues": '../public/singing/blues',
+    "Random": '../public/singing/random3',
+    "Pop": '../public/singing/Pop',
 }
 
 # SPEECH_PATH:
 path_speech = {
     "Food_review": '../public/talking/food_review',
+    "Food_review2": '../public/talking/food_review2',
+    # "Food_review3": '../public/talking/food_review3',
     "Gura": '../public/talking/gura',
+    "Gura_short_clip": '../public/talking/gura_short_clip',
+    "Amelia": '../public/talking/Amelia',
+    "Calliope": '../public/talking/Calliope',
+    "Inanis": '../public/talking/Inanis',
+    "Kiara": '../public/talking/kiara',
+    "Mixed_clip": '../public/talking/mixed_clip',
     "Movie_review": '../public/talking/movie_review',
-    "Techonology_review":'../public/talking/technology_review',
+    "Movie_review2": '../public/talking/movie_review2',
+    "Movie_review3": '../public/talking/movie_review3',
+    "Technology_review": '../public/talking/technology_review',
+    "Technology_review2": '../public/talking/technology_review2',
+    "Technology_review3": '../public/talking/technology_review3',
+
 }
 
 # Saving model path
@@ -49,7 +71,11 @@ MODEL_OUT_DIR = 'model/'
 # Additional model will be add here
 SAVED_MODEL_DIR = [
     # train with 400 sing and 900 speech, achieve 75% - 80% on country and food_review
-    'model/my_model',
+    'model/my_model',       # 1, 2, 3 is fail, overfit from singing
+    'model/my_model2',      #
+    'model/my_model3',      #
+    'model/my_model4',      # better model
+    'model/my_model5',      # model from an audio classifier paper
 ]
 
 seed = 42
@@ -62,15 +88,15 @@ np.random.seed(seed)
 
 # load_data: receive a directory path, return array of all files path inside it as tensor
 def load_data(file_paths):
-    print(file_paths)
     data = []
     for path in file_paths:
         data = data + tf.io.gfile.glob(str(path) + '/*')
+    np.random.shuffle(data)
     return data
 
 
 # split_data: Divide an array into train, validation and test data set
-def split_data(data, train=0.8, val=0.1, test=0.1):
+def split_data(data, train=0.8, val=0.01, test=0.19):
     data_len = len(data)
     train_len, val_len, test_len = \
         [int(data_len * train), int(data_len * val), int(data_len * test)]
@@ -99,7 +125,7 @@ def get_waveform_and_label(file_path):
 
 
 # get_spectrogram: return spectrogram as binary information from input waveform
-def get_spectrogram(waveform, FRAME_LENGTH=255, FRAME_STEP=128, FREQUENCY=240000):
+def get_spectrogram(waveform, FRAME_LENGTH=512, FRAME_STEP=255, FREQUENCY=240000):
     zero_padding = tf.zeros([FREQUENCY] - tf.shape(waveform), dtype=tf.float32)
     waveform = tf.cast(waveform, tf.float32)
     equal_length = tf.concat([waveform, zero_padding], 0)
@@ -152,20 +178,112 @@ def build_model(input_shape, spectrogram_ds, num_labels):
         norm_layer.adapt(spectrogram_ds.map(lambda x, _: x))
         return norm_layer
 
+
+    # model = tf.keras.models.Sequential([
+    #     layers.Conv2D(32, kernel_size=(3, 3), activation='relu', input_shape=input_shape),
+    #     layers.MaxPooling2D(pool_size=(2,2)),
+    #     layers.Conv2D(32, (3, 3), activation='relu'),
+    #     layers.MaxPooling2D(pool_size=(2,2)),
+    #     layers.Dropout(0.25),
+    #     layers.Flatten(),
+    #     layers.Dense(128, activation='relu'),
+    #     layers.Dropout(0.5),
+    #     layers.Dense(num_labels)
+    # ])
     # model: default model to process audio, taken from google guide
+    # model = models.Sequential([
+    #     layers.Input(shape=input_shape),
+    #     preprocessing.Resizing(32, 32),
+    #     normalization(spectrogram_ds),
+    #     layers.Conv2D(32, 3, activation='relu'),
+    #     layers.Conv2D(64, 3, activation='relu'),
+    #     layers.MaxPooling2D(),
+    #     layers.Dropout(0.25),
+    #     layers.Flatten(),
+    #     layers.Dense(128, activation='relu'),
+    #     layers.Dropout(0.5),
+    #     layers.Dense(num_labels),
+    # ])
+    ##########################################################################
+    #(1): model from Convolutional Neural Network based Audio
+    # Event Classification
     model = models.Sequential([
-        layers.Input(shape=input_shape),
-        preprocessing.Resizing(32, 32),
-        normalization(spectrogram_ds),
-        layers.Conv2D(32, 3, activation='relu'),
-        layers.Conv2D(64, 3, activation='relu'),
-        layers.MaxPooling2D(),
+        layers.Input(shape =input_shape),
+        layers.Conv2D(32, kernel_size=(5, 5), activation='relu'),
+        layers.MaxPooling2D(pool_size=(2,2)),
+        layers.Conv2D(32, (5, 5), activation='relu'),
+        layers.MaxPooling2D(pool_size=(2, 2)),
         layers.Dropout(0.25),
         layers.Flatten(),
         layers.Dense(128, activation='relu'),
         layers.Dropout(0.5),
-        layers.Dense(num_labels),
+        layers.Dense(num_labels)
     ])
+
+    model = models.Sequential([
+        layers.Input(shape=input_shape),
+        layers.Conv2D(32, kernel_size=(5, 5), activation='relu'),
+        layers.Conv2D(64, kernel_size=(5, 5), activation='relu'),
+        layers.MaxPooling2D(pool_size=(2, 2)),
+        layers.Conv2D(32, (4, 4), activation='relu'),
+        layers.MaxPooling2D(pool_size=(2, 2)),
+        layers.Conv2D(64, kernel_size=(3, 3), activation='relu'),
+        layers.MaxPooling2D(pool_size=(2, 2)),
+        layers.Dropout(0.25),
+        layers.Flatten(),
+        layers.Dense(128, activation='relu'),
+        layers.Dropout(0.5),
+        layers.Dense(num_labels)
+    ])
+
+    model = models.Sequential([
+        layers.Input(shape=input_shape),
+        layers.Conv2D(32, kernel_size=(5, 5), activation='relu'),
+        layers.Conv2D(64, kernel_size=(5, 5), activation='relu'),
+        layers.MaxPooling2D(pool_size=(2, 2)),
+        layers.Conv2D(32, (4, 4), activation='relu'),
+        layers.MaxPooling2D(pool_size=(2, 2)),
+        layers.Conv2D(64, kernel_size=(3, 3), activation='relu'),
+        layers.MaxPooling2D(pool_size=(2, 2)),
+        layers.Dropout(0.25),
+        layers.Flatten(),
+        layers.Dense(128, activation='relu'),
+        layers.Dropout(0.5),
+        layers.Dense(num_labels)
+    ])
+    #######################################################################
+    #(2): https://arxiv.org/pdf/1811.06669.pdf
+
+    model = models.Sequential([
+        layers.Input(shape=input_shape),
+        layers.Conv2D(32, kernel_size=(3,3), activation='relu',strides=(1,1)),
+        layers.MaxPooling2D(pool_size=(2,2)),
+        layers.Conv2D(64, kernel_size=(3,3), activation='relu',strides=(1,1)),
+        layers.Conv2D(64, kernel_size=(3,3), activation='relu',strides=(1,1)),
+        layers.MaxPooling2D(pool_size=(2,2)),
+        layers.Conv2D(128, kernel_size=(3,3), activation='relu',strides=(1,1)),
+        layers.Conv2D(128, kernel_size=(3,3), activation='relu',strides=(1,1)),
+        layers.MaxPooling2D(pool_size=(2,2)),
+        layers.Conv2D(256, kernel_size=(3,3), activation='relu',strides=(1,1)),
+        layers.Conv2D(256, kernel_size=(3,3), activation='relu',strides=(1,1)),
+        layers.MaxPooling2D(pool_size=(2,2)),
+        layers.Conv2D(512, kernel_size=(3,3), activation='relu',strides=(1,1)),
+        layers.Conv2D(512, kernel_size=(3,3), activation='relu',strides=(1,1)),
+        layers.MaxPooling2D(pool_size=(2,2)),
+        layers.Conv2D(50, kernel_size=(1,1), activation='relu',strides=(1,1)),
+        layers.AveragePooling2D(pool_size=(2,4), strides=(1,1)),
+        layers.Dropout(0.25),
+        layers.Flatten(),
+        layers.Dense(128, activation='relu'),
+        layers.Dropout(0.5),
+        layers.Dense(num_labels)
+    ])
+    #######################################################################
+    #(3):https://github.com/jordipons/elmarc#:~:text=
+    #Randomly%20weighted%20CNNs%20for%20(music)%20audio
+    #%20classification%20This,with%20the%20results%20of%20
+    #their%20end-to-end%20trained%20counterparts.
+
     return model
 
 
@@ -185,11 +303,12 @@ def compile_model(model):
 
 def train_model(model, train_ds, val_ds):
     EPOCHS = 10
+    callback = tf.keras.callbacks.EarlyStopping(monitor='loss', patience=3)
     history = model.fit(
         train_ds,
+        callbacks=[callback],
         validation_data=val_ds,
         epochs=EPOCHS,
-        callbacks=tf.keras.callbacks.EarlyStopping(verbose=1, patience=2),
     )
     return history
 
@@ -204,18 +323,18 @@ def evaluate(model, test_ds):
 
     test_audio = np.array(test_audio)
     test_labels = np.array(test_labels)
-
-    y_pred = np.argmax(model.predict(test_audio), axis=1)
+    temp = model.predict(test_audio)
+    y_pred = np.argmax(temp, axis=1)
     y_true = test_labels
     test_acc = sum(y_pred == y_true) / len(y_true)
     print(f'Test set accuracy: {test_acc:.0%}')
-
+    return temp
 
 # Saved Model
 def save_model(model, path, OVERWRITE=False):
-    if os.path.exists("path") & OVERWRITE == False:
-        print("theere exists a model in this path")
-        return
+    # if os.path.exists("path") & OVERWRITE == False:
+    #     print("theere exists a model in this path")
+    #     return
 
     model.save(path)
 
@@ -235,7 +354,7 @@ def run_training_model(path_array):
 
     ##Split the files into training, validation and test sets using 80:10:10 ratio
     train_files, val_files, test_files = split_data(data)
-    print(data)
+    val_files = load_data([path_speech["Amelia"], path_sing["Pekora"]])  # TODO: change validation file to avoid overfit
     # Process training data set
     files_ds = tf.data.Dataset.from_tensor_slices(train_files)
     waveform_ds = files_ds.map(get_waveform_and_label, num_parallel_calls=AUTOTUNE)
@@ -244,7 +363,7 @@ def run_training_model(path_array):
     test_ds = preprocess_dataset(test_files)
 
     # Batch the training
-    batch_size = 64
+    batch_size = 8
     train_ds = spectrogram_ds
     train_ds = train_ds.batch(batch_size)
     val_ds = val_ds.batch(batch_size)
@@ -270,7 +389,7 @@ def run_training_model(path_array):
 def evaluate_model(model, path_array):
     test_ds = load_data(path_array)
     test_ds = preprocess_dataset(test_ds)
-    evaluate(model, test_ds)
+    return evaluate(model, test_ds)
 
 ##################################################################################################
 # Utilities function
@@ -283,6 +402,7 @@ def process_mp3(path, out):
 
 # Process_wavFile: Split audio file into smaller audio file
 def process_wavFile(path, out_path):
+    print(path)
     filelist = []
     for root, dir, files in os.walk(path):
         for file in files:
@@ -299,7 +419,16 @@ def process_wavFile(path, out_path):
             index += 1
             time += 5000
 
-
+def process_single(path, out_path):
+    song = AudioSegment.from_wav(path)
+    song = song.set_channels(1)  # Channel 1 = mono, 2 = stereo
+    time = 0
+    index = 0
+    while time < len(song):
+        temp = song[time: min(time + 5000, len(song))]
+        temp.export(out_path + '/file' + str(index) + '.wav', format='wav')
+        index += 1
+        time += 5000
 ##########################################################################################
 # Graphing
 # Use this when need to visualize
@@ -357,17 +486,33 @@ def graph_efficiency(history):
 ##########################################################################################
 # Main body
 def main():
-    model = run_training_model([path_sing["Gura"], path_speech["Gura"]])
-    evaluate_model(model,
-                [
-                    path_sing["Country"],
-                    path_sing["Dance_electronic"],
-                    path_speech["Food_review"],
-                    path_speech["Movie_review"],
-                    path_speech["technology_review"]
-                ])
+    model = load_model("", 3)
+    test_ds = [
+        # path_speech['Technology_review'],
+        # path_speech['Technology_review2'],
+        # path_speech['Technology_review3'],
+        # path_speech['Movie_review'],
+        # path_speech['Movie_review2'],
+        # path_speech['Movie_review3'],
+        # path_speech['Food_review'],
+        # path_speech['Food_review2'],
+        path_sing['Country2'],
+        # path_sing["Dance_electronic"],
+        # path_sing["Duet"],
+        # path_sing["Rap"],
+        # path_sing["Rock"],
+        # path_sing["Traditionals"],
+        # path_sing["Blues"],
+        # path_sing["Random"],
+        # path_sing["Pop"]
+    ]
+    for path in test_ds:
+        print(path)
+        evaluate_model(model, [path])
+    # print(result[:100])
 
     #Note: When I use Gura: which is song and speech by the same person, i got good accuracy
     # When I use speech and song by difference person to train, the accuracy become really low
 
 main()
+#process_single('../public/raw_video/singing/country/country2.wav','../public/singing/Country2')
