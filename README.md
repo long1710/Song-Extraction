@@ -26,3 +26,9 @@ for Speech, Music and Noise
 Classification and Segmentation
 </a></li>
 </ul>
+
+<h1> Other resources </h1>
+<ul>
+ <li> <a href = "https://medium.com/in-pursuit-of-artificial-intelligence/audio-classification-using-automl-vision-56abaaa6faa1#:~:text=%20Audio%20Classification%20using%20AutoML%20Vision%20%201,paths%20and%20their%20label.%20I%20have...%20More%20" /> autoML vision
+ </li>
+ </ul>
