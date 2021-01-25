@@ -20,4 +20,9 @@ CONVOLUTIONAL NEURAL NETWORK</a></p>
   <p>Note: same bit rate ( 12000 khz) </p>
  </li>
   <li><a href ="https://arxiv.org/pdf/1811.06669.pdf">ACLNET: EFFICIENT END-TO-END AUDIO CLASSIFICATION CNN</a></li>
+  </li>
+  <li><a href ="https://arxiv.org/pdf/1812.00149.pdf">SwishNet: A Fast Convolutional Neural Network
+for Speech, Music and Noise
+Classification and Segmentation
+</a></li>
 </ul>
