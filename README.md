@@ -27,6 +27,9 @@ Classification and Segmentation
 </a></li>
 </ul>
 
+<h1> Model link </h1>
+ <h3> Fully train and load with 10000 image, feature: DenseNet, ResNet, XCeption and Inception </h3>
+ <a href = "https://drive.google.com/drive/folders/1r5laOidbHkyZUOmx1LvJ5_zCOQWeEe6H?usp=sharing"> Google Drive </a>
 <h1> Other resources </h1>
 <ul>
  <li> <a href = "https://medium.com/in-pursuit-of-artificial-intelligence/audio-classification-using-automl-vision-56abaaa6faa1#:~:text=%20Audio%20Classification%20using%20AutoML%20Vision%20%201,paths%20and%20their%20label.%20I%20have...%20More%20" /> autoML vision
