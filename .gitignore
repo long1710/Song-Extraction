@@ -7,3 +7,13 @@ src/model/my_model4/variables/variables.index
 src/model/my_model4/variables/variables.data-00000-of-00001
 src/model/my_model5/saved_model.pb
 src/model/my_model4/saved_model.pb
+src/model/content/VGG16/saved_model.pb
+src/model/content/VGG16/variables/variables.data-00000-of-00001
+src/model/content/VGG16/variables/variables.index
+src/model/content/VGG19/saved_model.pb
+src/model/content/VGG19/variables/variables.data-00000-of-00001
+src/model/content/VGG19/variables/variables.index
+src/model/my_model/saved_model.pb
+src/densenet.py
+src/__pycache__/cli.cpython-38.pyc
+src/__pycache__/densenet.cpython-38.pyc

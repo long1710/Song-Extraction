@@ -1,6 +1,6 @@
 import os
 import pathlib
-
+from datetime import datetime
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
@@ -8,8 +8,10 @@ import tensorflow as tf
 import scipy.io.wavfile as wav
 import scipy.signal as signal
 import random
-
+import densenet
+import librosa.display
 import librosa
+import skimage.io
 
 from pydub import AudioSegment
 from tensorflow.keras.layers.experimental import preprocessing
@@ -42,6 +44,7 @@ path_sing = {
     "Blues": '../public/singing/blues',
     "Random": '../public/singing/random3',
     "Pop": '../public/singing/Pop',
+    "Gtzan": '../public/singing/gtzan_music',
 }
 
 # SPEECH_PATH:
@@ -62,11 +65,12 @@ path_speech = {
     "Technology_review": '../public/talking/technology_review',
     "Technology_review2": '../public/talking/technology_review2',
     "Technology_review3": '../public/talking/technology_review3',
+    "Gtzan": '../public/talking/gtzan_speech',
 
 }
 
 # Saving model path
-MODEL_OUT_DIR = 'model/'
+MODEL_OUT_DIR = 'model/my_model7'
 
 # Additional model will be add here
 SAVED_MODEL_DIR = [
@@ -76,6 +80,7 @@ SAVED_MODEL_DIR = [
     'model/my_model3',      #
     'model/my_model4',      # better model
     'model/my_model5',      # model from an audio classifier paper
+    'model/my_model6',
 ]
 
 seed = 42
@@ -92,6 +97,7 @@ def load_data(file_paths):
     for path in file_paths:
         data = data + tf.io.gfile.glob(str(path) + '/*')
     np.random.shuffle(data)
+    print(len(data))
     return data
 
 
@@ -171,7 +177,7 @@ return a keras machine learning model
 '''
 
 
-def build_model(input_shape, spectrogram_ds, num_labels):
+def build_model(input_shape, spectrogram_ds, num_labels, model_index):
     # normalization: normalize incoming data based on original spectrogram dataset to build model
     def normalization(spectrogram_ds):
         norm_layer = preprocessing.Normalization()
@@ -207,83 +213,88 @@ def build_model(input_shape, spectrogram_ds, num_labels):
     ##########################################################################
     #(1): model from Convolutional Neural Network based Audio
     # Event Classification
-    model = models.Sequential([
-        layers.Input(shape =input_shape),
-        layers.Conv2D(32, kernel_size=(5, 5), activation='relu'),
-        layers.MaxPooling2D(pool_size=(2,2)),
-        layers.Conv2D(32, (5, 5), activation='relu'),
-        layers.MaxPooling2D(pool_size=(2, 2)),
-        layers.Dropout(0.25),
-        layers.Flatten(),
-        layers.Dense(128, activation='relu'),
-        layers.Dropout(0.5),
-        layers.Dense(num_labels)
-    ])
+    # model = models.Sequential([
+    #     layers.Input(shape =input_shape),
+    #     layers.Conv2D(32, kernel_size=(5, 5), activation='relu'),
+    #     layers.MaxPooling2D(pool_size=(2,2)),
+    #     layers.Conv2D(32, (5, 5), activation='relu'),
+    #     layers.MaxPooling2D(pool_size=(2, 2)),
+    #     layers.Dropout(0.25),
+    #     layers.Flatten(),
+    #     layers.Dense(128, activation='relu'),
+    #     layers.Dropout(0.5),
+    #     layers.Dense(num_labels)
+    # ])
+    if model_index == 0:
+        return models.Sequential([
+            layers.Input(shape=input_shape),
+            layers.Conv2D(32, kernel_size=(5, 5), activation='relu'),
+            layers.Conv2D(64, kernel_size=(5, 5), activation='relu'),
+            layers.MaxPooling2D(pool_size=(2, 2)),
+            layers.Conv2D(32, (4, 4), activation='relu'),
+            layers.MaxPooling2D(pool_size=(2, 2)),
+            layers.Conv2D(64, kernel_size=(3, 3), activation='relu'),
+            layers.MaxPooling2D(pool_size=(2, 2)),
+            layers.Dropout(0.25),
+            layers.Flatten(),
+            layers.Dense(128, activation='relu'),
+            layers.Dropout(0.5),
+            layers.Dense(num_labels)
+        ])
 
-    model = models.Sequential([
-        layers.Input(shape=input_shape),
-        layers.Conv2D(32, kernel_size=(5, 5), activation='relu'),
-        layers.Conv2D(64, kernel_size=(5, 5), activation='relu'),
-        layers.MaxPooling2D(pool_size=(2, 2)),
-        layers.Conv2D(32, (4, 4), activation='relu'),
-        layers.MaxPooling2D(pool_size=(2, 2)),
-        layers.Conv2D(64, kernel_size=(3, 3), activation='relu'),
-        layers.MaxPooling2D(pool_size=(2, 2)),
-        layers.Dropout(0.25),
-        layers.Flatten(),
-        layers.Dense(128, activation='relu'),
-        layers.Dropout(0.5),
-        layers.Dense(num_labels)
-    ])
-
-    model = models.Sequential([
-        layers.Input(shape=input_shape),
-        layers.Conv2D(32, kernel_size=(5, 5), activation='relu'),
-        layers.Conv2D(64, kernel_size=(5, 5), activation='relu'),
-        layers.MaxPooling2D(pool_size=(2, 2)),
-        layers.Conv2D(32, (4, 4), activation='relu'),
-        layers.MaxPooling2D(pool_size=(2, 2)),
-        layers.Conv2D(64, kernel_size=(3, 3), activation='relu'),
-        layers.MaxPooling2D(pool_size=(2, 2)),
-        layers.Dropout(0.25),
-        layers.Flatten(),
-        layers.Dense(128, activation='relu'),
-        layers.Dropout(0.5),
-        layers.Dense(num_labels)
-    ])
+    if model_index == 1:
+        return models.Sequential([
+            layers.Input(shape=input_shape),
+            layers.Conv2D(32, kernel_size=(5, 5), activation='relu'),
+            layers.Conv2D(64, kernel_size=(5, 5), activation='relu'),
+            layers.MaxPooling2D(pool_size=(2, 2)),
+            layers.Conv2D(32, (4, 4), activation='relu'),
+            layers.MaxPooling2D(pool_size=(2, 2)),
+            layers.Conv2D(64, kernel_size=(3, 3), activation='relu'),
+            layers.MaxPooling2D(pool_size=(2, 2)),
+            layers.Dropout(0.25),
+            layers.Flatten(),
+            layers.Dense(128, activation='relu'),
+            layers.Dropout(0.5),
+            layers.Dense(num_labels)
+        ])
     #######################################################################
     #(2): https://arxiv.org/pdf/1811.06669.pdf
-
     model = models.Sequential([
-        layers.Input(shape=input_shape),
-        layers.Conv2D(32, kernel_size=(3,3), activation='relu',strides=(1,1)),
-        layers.MaxPooling2D(pool_size=(2,2)),
-        layers.Conv2D(64, kernel_size=(3,3), activation='relu',strides=(1,1)),
-        layers.Conv2D(64, kernel_size=(3,3), activation='relu',strides=(1,1)),
-        layers.MaxPooling2D(pool_size=(2,2)),
-        layers.Conv2D(128, kernel_size=(3,3), activation='relu',strides=(1,1)),
-        layers.Conv2D(128, kernel_size=(3,3), activation='relu',strides=(1,1)),
-        layers.MaxPooling2D(pool_size=(2,2)),
-        layers.Conv2D(256, kernel_size=(3,3), activation='relu',strides=(1,1)),
-        layers.Conv2D(256, kernel_size=(3,3), activation='relu',strides=(1,1)),
-        layers.MaxPooling2D(pool_size=(2,2)),
-        layers.Conv2D(512, kernel_size=(3,3), activation='relu',strides=(1,1)),
-        layers.Conv2D(512, kernel_size=(3,3), activation='relu',strides=(1,1)),
-        layers.MaxPooling2D(pool_size=(2,2)),
-        layers.Conv2D(50, kernel_size=(1,1), activation='relu',strides=(1,1)),
-        layers.AveragePooling2D(pool_size=(2,4), strides=(1,1)),
-        layers.Dropout(0.25),
-        layers.Flatten(),
-        layers.Dense(128, activation='relu'),
-        layers.Dropout(0.5),
-        layers.Dense(num_labels)
-    ])
+            layers.Input(shape=input_shape),
+            layers.Conv2D(32, kernel_size=(3,3), activation='relu',strides=(1,1)),
+            layers.MaxPooling2D(pool_size=(2,2)),
+            layers.Conv2D(64, kernel_size=(3,3), activation='relu',strides=(1,1)),
+            layers.Conv2D(64, kernel_size=(3,3), activation='relu',strides=(1,1)),
+            layers.MaxPooling2D(pool_size=(2,2)),
+            layers.Conv2D(128, kernel_size=(3,3), activation='relu',strides=(1,1)),
+            layers.Conv2D(128, kernel_size=(3,3), activation='relu',strides=(1,1)),
+            layers.MaxPooling2D(pool_size=(2,2)),
+            layers.Conv2D(256, kernel_size=(3,3), activation='relu',strides=(1,1)),
+            layers.Conv2D(256, kernel_size=(3,3), activation='relu',strides=(1,1)),
+            layers.MaxPooling2D(pool_size=(2,2)),
+            layers.Conv2D(512, kernel_size=(3,3), activation='relu',strides=(1,1)),
+            layers.Conv2D(512, kernel_size=(3,3), activation='relu',strides=(1,1)),
+            layers.MaxPooling2D(pool_size=(2,2)),
+            layers.Conv2D(50, kernel_size=(1,1), activation='relu',strides=(1,1)),
+            layers.AveragePooling2D(pool_size=(2,4), strides=(1,1)),
+            layers.Dropout(0.25),
+            layers.Flatten(),
+            layers.Dense(128, activation='relu'),
+            layers.Dropout(0.5),
+            layers.Dense(num_labels)
+        ])
     #######################################################################
     #(3):https://github.com/jordipons/elmarc#:~:text=
     #Randomly%20weighted%20CNNs%20for%20(music)%20audio
     #%20classification%20This,with%20the%20results%20of%20
     #their%20end-to-end%20trained%20counterparts.
 
+    #################################################################
+    #(4): Dense net architecture ( Pytorch instead of tensorflow)
+    #https://arxiv.org/pdf/2007.11154.pdf
+    #Res net
+    #Inception
     return model
 
 
@@ -348,7 +359,7 @@ def load_model(path="", INDEX=0):
 
 
 #run_training_mode: return a model that has been build, compile and train
-def run_training_model(path_array):
+def run_training_model(path_array, model_index):
     ##Extract the audio files into a list
     data = load_data(path_array)
 
@@ -363,7 +374,7 @@ def run_training_model(path_array):
     test_ds = preprocess_dataset(test_files)
 
     # Batch the training
-    batch_size = 8
+    batch_size = 32
     train_ds = spectrogram_ds
     train_ds = train_ds.batch(batch_size)
     val_ds = val_ds.batch(batch_size)
@@ -377,7 +388,8 @@ def run_training_model(path_array):
         print('Input shape:', input_shape)
         num_labels = len(commands)
 
-    model = build_model(input_shape, spectrogram_ds, num_labels)
+    model, name = densenet.DenseNet(input_shape, nb_classes=2, dropout_rate=0.25)
+    model.summary()
     compile_model(model)
     train_model(model, train_ds, val_ds)
     evaluate(model, test_ds)
@@ -415,7 +427,7 @@ def process_wavFile(path, out_path):
         index = 0
         while time < len(song):
             temp = song[time: min(time + 5000, len(song))]
-            temp.export(out_path + '/file' + str(index) + '.wav', format='wav')
+            temp.export(out_path + '/file' + '[' + str(i) + ']' +str(index) + '.wav', format='wav')
             index += 1
             time += 5000
 
@@ -486,33 +498,79 @@ def graph_efficiency(history):
 ##########################################################################################
 # Main body
 def main():
-    model = load_model("", 3)
-    test_ds = [
-        # path_speech['Technology_review'],
-        # path_speech['Technology_review2'],
-        # path_speech['Technology_review3'],
-        # path_speech['Movie_review'],
-        # path_speech['Movie_review2'],
-        # path_speech['Movie_review3'],
-        # path_speech['Food_review'],
-        # path_speech['Food_review2'],
-        path_sing['Country2'],
-        # path_sing["Dance_electronic"],
-        # path_sing["Duet"],
-        # path_sing["Rap"],
-        # path_sing["Rock"],
-        # path_sing["Traditionals"],
-        # path_sing["Blues"],
-        # path_sing["Random"],
-        # path_sing["Pop"]
+    train_ds = [
+            path_speech['Technology_review'],
+            path_speech['Technology_review2'],
+            path_speech['Technology_review3'],
+            path_speech['Movie_review'],
+            path_speech['Movie_review2'],
+            path_speech['Movie_review3'],
+            path_speech['Food_review'],
+            path_speech['Food_review2'],
+            path_sing["Dance_electronic"],
+            path_sing["Duet"],
+            path_sing["Rap"],
+            path_sing["Rock"],
+            path_sing["Traditionals"],
+            path_sing["Blues"],
+            path_sing["Random"],
+            path_sing["Pop"]
     ]
-    for path in test_ds:
-        print(path)
-        evaluate_model(model, [path])
+    # i = 0
+    # while i < 3:
+    model = run_training_model(train_ds, 0)
+    save_model(model, MODEL_OUT_DIR)
+    # checkpoint1 = datetime.now()
+    # model = load_model("", 5)
+    # checkpoint2 = datetime.now()
+    test_ds = [
+    #     # path_speech['Technology_review'],
+    #     # path_speech['Technology_review2'],
+    #     # path_speech['Technology_review3'],
+    #     # path_speech['Movie_review'],
+    #     # path_speech['Movie_review2'],
+    #     # path_speech['Movie_review3'],
+    #     # path_speech['Food_review'],
+    #     # path_speech['Food_review2'],
+    #     path_speech["Amelia"],
+    #     path_speech["Mixed_clip"],
+    #     path_speech["Calliope"],
+    #     path_speech["Gura_short_clip"],
+        # path_speech["Gura"]
+    #     path_speech["Inanis"],
+    #     path_speech['Gtzan'],
+    #     path_sing['Gtzan'],
+    #       path_sing['Pop'],
+    #     path_sing['Country2'],
+    #     # path_sing["Dance_electronic"],
+    #     # path_sing["Duet"],
+    #     # path_sing["Rap"],
+    #     # path_sing["Rock"],
+    #     # path_sing["Traditionals"],
+    #     # path_sing["Blues"],
+    #     path_sing["Random"],
+    #     # path_sing["Pop"]
+    ]
+    # diff1 = checkpoint2 - checkpoint1
+    # print('loadmodel time: ')
+    # print(diff1)
+    # prev = datetime.now()
+    # # load_data(test_ds)
+    # for path in test_ds:
+    #     print(path)
+    #     evaluate_model(model, [path])
+    #     temp = datetime.now()
+    #     diff = temp - prev
+    #     print('difference in each load: ')
+    #     print(diff)
+    #     prev = temp
     # print(result[:100])
 
     #Note: When I use Gura: which is song and speech by the same person, i got good accuracy
     # When I use speech and song by difference person to train, the accuracy become really low
 
-main()
-#process_single('../public/raw_video/singing/country/country2.wav','../public/singing/Country2')
+# main()
+process_single('../public/testing/raw_video/talking/talk2.wav','../public/testing/talking/talking2')
+
+
+# process_wavFile('../public/data/music_speech/speech_wav', '../public/testing/gtzan_speech')

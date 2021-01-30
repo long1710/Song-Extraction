@@ -1,0 +1,19 @@
+{
+    "version": 0.5,
+    "model": {
+        "VGG19": "https://source1710.s3.amazonaws.com/VGG19.zip",
+        "VGG16": "https://source1710.s3.amazonaws.com/VGG16.zip",
+        "Xception": "https://source1710.s3.amazonaws.com/Xception.zip",
+        "ResNet50": "https://source1710.s3.amazonaws.com/ResNet50.zip",
+        "ResNet152": "https://source1710.s3.amazonaws.com/ResNet152.zip",
+        "ResNet101": "https://source1710.s3.amazonaws.com/ResNet101.zip",
+        "InceptionV3": "https://source1710.s3.amazonaws.com/InceptionV3.zip",
+        "DenseNet169": "https://source1710.s3.amazonaws.com/DenseNet169.zip",
+        "DenseNet201": "https://source1710.s3.amazonaws.com/DenseNet201.zip"
+    },
+    "package": [
+        "tensorflow",
+        "pydub",
+        ""
+    ]
+}
