@@ -19,6 +19,7 @@ import os
 import subprocess
 import numpy as np
 import shutil
+import time
 
 with open('config_file.json', 'r') as myfile:
     data = myfile.read()
@@ -53,7 +54,8 @@ def get_model(model):
     model = tf.keras.models.load_model(model_dir)
 
     print('finish loading model \n')
-    os.remove(dest_dir)
+    if(os.path.exists(dest_dir)):
+        os.remove(dest_dir)
     return tf.keras.Sequential([model, tf.keras.layers.Softmax()])
 
 #get_song: Retrieve song path and process into picture
@@ -61,6 +63,9 @@ def get_song(song_path):
     print('begin preprocessing song data... \n')
     if not os.path.exists("spectrogram"):
         os.makedirs("spectrogram")
+
+    if not os.path.exists("wav"):
+        os.makedirs("wav")
 
     if not os.path.exists("spectrogram/singing"):
         os.makedirs("spectrogram/singing")
@@ -70,8 +75,9 @@ def get_song(song_path):
     if(len(song) > 5000):
         ans = input('detect song size over 5 seconds, do you want to split into multiple 5 seconds segment ? Y/N ')
         if(ans == 'Y' or ans == 'y'):
-            preprocessing_longvideo(song)
-            video_to_img('wav')
+            file_name = preprocessing_longvideo(song)
+            print(file_name)
+            video_to_img('wav', file_name)
             return
         else:
             print('Cannot process audio with bigger or smaller than 5 seconds, terminating...')
@@ -109,12 +115,17 @@ def preprocessing_longvideo(song):
     while time + 5000 < len(song):
         temp = song[time: time + 5000]
         file_name = 'wav/file' + str(index) + '.wav'
-        img_name = 'spectrogram/singing/file' + str(index) + '.wav'
+        print(file_name)
         temp.export(file_name, format='wav')
         index += 1
         time += 1000 # 4s window overlap
+    #Return final name to check for the final file writing complete
+    return file_name
 
-def video_to_img(path):
+def video_to_img(path, file_name):
+    while not os.path.exists(file_name):
+        time.sleep(3)
+
     for root, dir, files in os.walk(path):
         i = 0
         for file in files:
@@ -125,8 +136,10 @@ def video_to_img(path):
 
 #clean up the wav and jpg file after prediction
 def clean_up():
-    shutil.rmtree('wav')
-    shutil.rmtree('spectrogram')
+    if(os.path.exists('wav')):
+        shutil.rmtree('wav')
+    if(os.path.exists('spectrogram')):
+        shutil.rmtree('spectrogram')
 
 #prediction: all process together
 def prediction():
